@@ -16,7 +16,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         print("didFinishLaunchingWithOptions")
         
         //To get the link to the local database file in mac
-        print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
+       /* print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)*/
+        
+        //
         return true
     }
     
