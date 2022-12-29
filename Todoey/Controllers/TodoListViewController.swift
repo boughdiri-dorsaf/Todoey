@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import CoreData
+//import CoreData
 
 class TodoListViewController: UITableViewController {
     
@@ -16,12 +18,15 @@ class TodoListViewController: UITableViewController {
     //Local database in swift
     //let defaults = UserDefaults.standard
     
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
+    //let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        print(dataFilePath)
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
         //Loaded data from userDefaults
         /*if let items = defaults.array(forKey: "TodoListArray") as? [String] {
@@ -75,6 +80,9 @@ class TodoListViewController: UITableViewController {
     // didselectRow: to cheeck if the row selected
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
+        //context.delete(itemArray[indexPath.row])
+        //itemArray.remove(at: indexPath.row)
+        
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
         self.saveItems()
@@ -102,15 +110,18 @@ class TodoListViewController: UITableViewController {
             
             let textField = alert.textFields![0]
             
-            let newItem = Item()
+            //Access to the delegate page as an object
+            
+            let newItem = Item(context: self.context)
+            
             newItem.title = textField.text!
+            newItem.done = false
             self.itemArray.append(newItem)
             
             //Add an item in the local database with forkey: to describe the key and the element to add in the dirst parenthesis
             //self.defaults.set(self.itemArray, forKey: "TodoListArray")
             
             self.saveItems()
-            
         }
         
         alert.addAction(action)
@@ -120,25 +131,34 @@ class TodoListViewController: UITableViewController {
     }
     
     func saveItems() {
-        //To encode data to save it
-        let encoder = PropertyListEncoder()
+        /* //To encode data to save it
+         let encoder = PropertyListEncoder()
+         do {
+         let data = try encoder.encode(self.itemArray)
+         try data.write(to: dataFilePath!)
+         } catch {
+         print("Error encoding item array \(error)")
+         }
+         tableView.reloadData()*/
+        
+        
         do {
-            let data = try encoder.encode(self.itemArray)
-            try data.write(to: dataFilePath!)
+            try context.save()
         } catch {
-            print("Error encoding item array \(error)")
+            print("error \(error)")
         }
+        
         tableView.reloadData()
     }
     
+    
+    
     func loadItems(){
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            let decoder = PropertyListDecoder()
-            do {
-                itemArray = try decoder.decode([Item].self, from: data)
-            }catch {
-                print("Eroor in load data \(error)")
-            }
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+            itemArray = try context.fetch(request)
+        } catch {
+            print("Error in get Data \(error)")
         }
     }
     
